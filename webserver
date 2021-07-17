@@ -3,7 +3,20 @@
 
 START=21
 
+PATH_TO_SCRIPT="/root/"
+SCRIPT="server.py"
+
 boot() {
-	/usr/bin/python3 /root/server.py &
+	start "$@"
+}
+
+start() {
+	/usr/bin/python3 "${PATH_TO_SCRIPT}${SCRIPT}" &
+}
+
+stop() {
+	SEARCH_PATTERN="[p]ython3 ${PATH_TO_SCRIPT}${SCRIPT}"
+	pid=`ps | grep "$SEARCH_PATTERN" | awk '{print $1}'`
+	kill $pid
 }
 
