@@ -1,9 +1,9 @@
 # Python 3 web server
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from time import strftime, gmtime
+import subprocess
 
 hostName = "192.168.1.65"
-serverPort = 5061
 
 class MyServer(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -15,8 +15,10 @@ class MyServer(BaseHTTPRequestHandler):
         self.wfile.write(bytes("</body></html>", "utf-8"))
 
 if __name__ == "__main__":
-    webServer = HTTPServer((hostName, serverPort), MyServer)
-    print("Server started http://%s:%s" % (hostName, serverPort))
+    serverPort = subprocess.run(["uci", "get", "webserver.server.port"], stdout=subprocess.PIPE, text=True, check=True)
+
+    webServer = HTTPServer((hostName, int(serverPort.stdout)), MyServer)
+    print("Server started http://%s:%s" % (hostName, serverPort.stdout))
 
     try:
         webServer.serve_forever()
