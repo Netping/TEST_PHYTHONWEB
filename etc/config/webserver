@@ -1,0 +1,4 @@
+
+config interface 'server'
+	option port '5061'
+
