@@ -2,8 +2,21 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from time import strftime, gmtime
 import subprocess
+from threading import Thread
 
 hostName = "192.168.1.65"
+
+class StoppableHTTPServer(HTTPServer):
+    def run(self):
+        try:
+            self.serve_forever()
+        except KeyboardInterrupt:
+            print("StoppableHTTPServer === KeyboardInterrupt")
+            pass
+        finally:
+            # Clean-up server (close socket, etc.)
+            self.server_close()
+            print("Server stopped.")
 
 class MyServer(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -17,13 +30,17 @@ class MyServer(BaseHTTPRequestHandler):
 if __name__ == "__main__":
     serverPort = subprocess.run(["uci", "get", "webserver.server.port"], stdout=subprocess.PIPE, text=True, check=True)
 
-    webServer = HTTPServer((hostName, int(serverPort.stdout)), MyServer)
+    webServer = StoppableHTTPServer((hostName, int(serverPort.stdout)), MyServer)
     print("Server started http://%s:%s" % (hostName, serverPort.stdout))
+    thread = Thread(None, webServer.run)
+    thread.start()
 
     try:
-        webServer.serve_forever()
+        thread.join()
     except KeyboardInterrupt:
-        pass
+        print("__main__ === KeyboardInterrupt")
 
-    webServer.server_close()
-    print("Server stopped.")
+# Shutdown server
+    webServer.shutdown()
+    thread.join()
+    print("FINITO a la comedy")
