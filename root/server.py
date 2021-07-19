@@ -1,6 +1,6 @@
 # Python 3 web server
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from time import strftime, gmtime
+from time import strftime, gmtime, sleep
 import subprocess
 from threading import Thread
 
@@ -27,20 +27,39 @@ class MyServer(BaseHTTPRequestHandler):
         self.wfile.write(bytes("<p>Hello world %s</p>" % strftime("%Y-%m-%d %H:%M:%S", gmtime()), "utf-8"))
         self.wfile.write(bytes("</body></html>", "utf-8"))
 
-if __name__ == "__main__":
+def get_port():
     serverPort = subprocess.run(["uci", "get", "webserver.server.port"], stdout=subprocess.PIPE, text=True, check=True)
+    return int(serverPort.stdout)
 
-    webServer = StoppableHTTPServer((hostName, int(serverPort.stdout)), MyServer)
-    print("Server started http://%s:%s" % (hostName, serverPort.stdout))
+def run_server(host_name, port):
+    webServer = StoppableHTTPServer((host_name, port), MyServer)
+    print("Server started http://%s:%i" % (host_name, port))
     thread = Thread(None, webServer.run)
     thread.start()
 
+    return webServer, thread
+
+def stop_server(webServer, thread):
+    webServer.shutdown()
+    thread.join()
+    print("Shutdown Thread")
+
+if __name__ == "__main__":
+    old_port = get_port()
+    cur_port = old_port
+
+    webServer, thread = run_server(hostName, cur_port)
+
     try:
-        thread.join()
+        while True:
+            cur_port = get_port()
+            if cur_port != old_port:
+                stop_server(webServer, thread)
+                webServer, thread = run_server(hostName, cur_port)
+                old_port = cur_port
+            sleep(1)
     except KeyboardInterrupt:
         print("__main__ === KeyboardInterrupt")
 
-# Shutdown server
-    webServer.shutdown()
-    thread.join()
+    stop_server(webServer, thread)
     print("FINITO a la comedy")
