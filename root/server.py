@@ -4,8 +4,6 @@ from time import strftime, gmtime, sleep
 import subprocess
 from threading import Thread
 
-hostName = "192.168.1.65"
-
 class StoppableHTTPServer(HTTPServer):
     def run(self):
         try:
@@ -45,17 +43,20 @@ def stop_server(webServer, thread):
     print("Shutdown Thread")
 
 if __name__ == "__main__":
+    host_option = subprocess.run(["uci", "get", "network.lan.ipaddr"], stdout=subprocess.PIPE, text=True, check=True)
+    hostname = host_option.stdout.rstrip()
+
     old_port = get_port()
     cur_port = old_port
 
-    webServer, thread = run_server(hostName, cur_port)
+    webServer, thread = run_server(hostname, cur_port)
 
     try:
         while True:
             cur_port = get_port()
             if cur_port != old_port:
                 stop_server(webServer, thread)
-                webServer, thread = run_server(hostName, cur_port)
+                webServer, thread = run_server(hostname, cur_port)
                 old_port = cur_port
             sleep(1)
     except KeyboardInterrupt:
