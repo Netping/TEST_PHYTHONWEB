@@ -1,6 +1,6 @@
 # Python 3 web server
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from time import strftime, gmtime, sleep
+from time import sleep
 import subprocess
 from threading import Thread
 
@@ -22,7 +22,8 @@ class MyServer(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/html")
         self.end_headers()
         self.wfile.write(bytes("<html><head><title>https://web_OpenWrt.org</title></head>", "utf-8"))
-        self.wfile.write(bytes("<p>Hello world %s</p>" % strftime("%Y-%m-%d %H:%M:%S", gmtime()), "utf-8"))
+        sys_info = subprocess.run(["ubus", "call", "system", "info"], stdout=subprocess.PIPE, text=True, check=True)
+        self.wfile.write(bytes("<p>%s</p>" % sys_info.stdout, "utf-8"))
         self.wfile.write(bytes("</body></html>", "utf-8"))
 
 def get_port():
