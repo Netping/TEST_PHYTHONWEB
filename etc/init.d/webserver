@@ -3,7 +3,7 @@
 
 START=21
 
-PATH_TO_SCRIPT="/root/"
+PATH_TO_SCRIPT="/root/webserver"
 SCRIPT="server.py"
 
 boot() {
